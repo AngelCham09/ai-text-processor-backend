@@ -10,5 +10,6 @@ class TextJob extends Model
         'input_text',
         'action_type',
         'output_text',
+        'user_id',
     ];
 }
