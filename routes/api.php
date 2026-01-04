@@ -2,15 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 
+Route::middleware('throttle:auth')->group(function () {
+    Route::post('/register', [\App\Http\Controllers\Api\UserController::class, 'register']);
+    Route::post('/login', [\App\Http\Controllers\Api\UserController::class, 'login']);
+});
 
-Route::post('/register', [\App\Http\Controllers\Api\UserController::class, 'register']);
-Route::post('/login', [\App\Http\Controllers\Api\UserController::class, 'login']);
-
-Route::middleware('optional.sanctum')->group(function () {
+Route::middleware(['optional.sanctum', 'throttle:process-text'])->group(function () {
     Route::post('/process-text', [\App\Http\Controllers\Api\TextProcessorController::class, 'process']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:user-api'])->group(function () {
     Route::post('/logout', [\App\Http\Controllers\Api\UserController::class, 'logout']);
     Route::get('/profile', [\App\Http\Controllers\Api\UserController::class, 'profile']);
     Route::get('/history', [\App\Http\Controllers\Api\TextProcessorController::class, 'history']);
