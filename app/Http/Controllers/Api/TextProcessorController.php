@@ -6,8 +6,10 @@ use App\Enums\TextActionType;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProcessTextRequest;
+use App\Http\Resources\TextJobResource;
 use App\Models\TextJob;
 use App\Services\TextProcessors\TextProcessorService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class TextProcessorController extends Controller
@@ -63,8 +65,12 @@ class TextProcessorController extends Controller
         }
     }
 
-    public function history()
+    public function history(Request $request)
     {
-        return TextJob::latest()->limit(50)->get();
+        $jobs = TextJob::where('user_id', $request->user()->id)
+            ->latest()
+            ->paginate(3);
+
+        return ApiResponse::success('User profile fetched successfully', TextJobResource::collection($jobs));
     }
 }
