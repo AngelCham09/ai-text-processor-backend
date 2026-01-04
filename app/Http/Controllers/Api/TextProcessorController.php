@@ -6,8 +6,10 @@ use App\Enums\TextActionType;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProcessTextRequest;
+use App\Http\Resources\TextJobResource;
 use App\Models\TextJob;
 use App\Services\TextProcessors\TextProcessorService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class TextProcessorController extends Controller
@@ -21,7 +23,10 @@ class TextProcessorController extends Controller
 
     public function process(ProcessTextRequest $request)
     {
+        $user = $request->user();
+
         Log::info('Text action requested', [
+            'user_id' => $user?->id,
             'action' => $request->action,
         ]);
 
@@ -36,6 +41,7 @@ class TextProcessorController extends Controller
                 'input_text' => $validated['text'],
                 'action_type' => $action->value,
                 'output_text' => $result,
+                'user_id' => $user?->id,
             ]);
 
             return ApiResponse::success('Text processed successfully', [
@@ -44,6 +50,7 @@ class TextProcessorController extends Controller
         } catch (\InvalidArgumentException $e) {
             // Invalid enum/action type
             Log::warning('Invalid action type', [
+                'user_id' => $user?->id,
                 'action' => $request->action
             ]);
             return ApiResponse::error('Invalid action type', null, 400);
@@ -51,14 +58,19 @@ class TextProcessorController extends Controller
             // Other exceptions
             Log::error('Text processing error', [
                 'message' => $e->getMessage(),
+                'user_id' => $user?->id,
                 'action' => $request->action,
             ]);
             return ApiResponse::error('Text processing failed', null, 500);
         }
     }
 
-    public function history()
+    public function history(Request $request)
     {
-        return TextJob::latest()->limit(50)->get();
+        $jobs = TextJob::where('user_id', $request->user()->id)
+            ->latest()
+            ->paginate(3);
+
+        return ApiResponse::success('User profile fetched successfully', TextJobResource::collection($jobs));
     }
 }
