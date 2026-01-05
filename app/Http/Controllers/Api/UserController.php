@@ -68,7 +68,7 @@ class UserController extends Controller
 
         return ApiResponse::success('Login successful', [
             'token' => $token,
-            'user' => $user,
+            'user' => new UserResource($user),
         ]);
     }
 
