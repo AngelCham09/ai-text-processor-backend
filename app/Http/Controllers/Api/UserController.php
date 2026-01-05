@@ -39,7 +39,7 @@ class UserController extends Controller
 
             return ApiResponse::success('User registered successfully', [
                 'token' => $token,
-                'user' => $user,
+                'user' => new UserResource($user),
             ]);
         } catch (ValidationException $e) {
             return ApiResponse::error('Registration validation failed', $e->errors(), 422);
