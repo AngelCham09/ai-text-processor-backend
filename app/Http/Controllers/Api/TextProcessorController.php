@@ -71,6 +71,6 @@ class TextProcessorController extends Controller
             ->latest()
             ->paginate(3);
 
-        return ApiResponse::success('User profile fetched successfully', TextJobResource::collection($jobs));
+        return ApiResponse::success('History fetched successfully', TextJobResource::collection($jobs));
     }
 }
