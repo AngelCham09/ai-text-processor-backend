@@ -9,7 +9,7 @@ class TextProcessorService
     public function process(string $text, TextActionType $action): string
     {
         $processor = TextProcessorFactory::create($action);
-        return $processor->process($text);
+        return $processor->processAI($text);
     }
 
 }
