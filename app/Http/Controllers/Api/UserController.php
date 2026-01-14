@@ -36,12 +36,13 @@ class UserController extends Controller
             ]);
 
             $user->sendEmailVerificationNotification();
-            
-            return ApiResponse::success(
-                'Registration successful. Please verify your email.',
-                null,
-                201
-            );
+
+            $token = $user->createToken('api-token')->plainTextToken;
+
+            return ApiResponse::success('User registered successfully', [
+                'token' => $token,
+                'user' => $user,
+            ]);
 
         } catch (ValidationException $e) {
             return ApiResponse::error('Registration validation failed', $e->errors(), 422);
