@@ -35,12 +35,14 @@ class UserController extends Controller
                 'password' => Hash::make($validated['password']),
             ]);
 
-            $token = $user->createToken('api-token')->plainTextToken;
+            $user->sendEmailVerificationNotification();
+            
+            return ApiResponse::success(
+                'Registration successful. Please verify your email.',
+                null,
+                201
+            );
 
-            return ApiResponse::success('User registered successfully', [
-                'token' => $token,
-                'user' => new UserResource($user),
-            ]);
         } catch (ValidationException $e) {
             return ApiResponse::error('Registration validation failed', $e->errors(), 422);
         } catch (\Exception $e) {
