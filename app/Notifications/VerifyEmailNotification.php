@@ -9,7 +9,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
 
-class VerifyEmailNotification extends Notification
+class VerifyEmailNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -36,41 +36,30 @@ class VerifyEmailNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        // 1. Create the secure backend URL (this has /id/hash in the path)
-        $temporarySignedUrl = URL::temporarySignedRoute(
+        URL::forceRootUrl(config('app.url'));
+
+        // 1. Generate the Backend Signed URL
+        $backendUrl = URL::temporarySignedRoute(
             'verification.verify',
-            Carbon::now()->addMinutes(60),
+            now()->addMinutes(60),
             [
                 'id' => $notifiable->getKey(),
                 'hash' => sha1($notifiable->getEmailForVerification()),
             ]
         );
 
-        // 2. Parse the URL to get pieces
-        $urlParts = parse_url($temporarySignedUrl);
+        // 2. Extract the signature part
+        $queryString = parse_url($backendUrl, PHP_URL_QUERY);
 
-        // 3. Extract ID and Hash from the path string
-        // Path looks like: /api/email/verify/1/abc...
-        $segments = explode('/', trim($urlParts['path'], '/'));
-
-        // Based on your route: /email/verify/{id}/{hash}
-        // These are usually the last two segments
-        $id = $segments[count($segments) - 2];
-        $hash = $segments[count($segments) - 1];
-
-        // 4. Build the final Nuxt link with everything in the query string
-        // Logic: BASE_URL + /verify-email + ?id=...&hash=...&expires=...&signature=...
-        $frontendUrl = config('app.frontend_url') . '/verify-email?' . http_build_query([
-            'id' => $id,
-            'hash' => $hash,
-            'expires' => request()->query('expires', $urlParts['query'] ?? ''),
-        ]);
-
-        // Append the signature manually because it's already in the query string from parse_url
-        $frontendUrl = config('app.frontend_url') . '/verify-email?id=' . $id . '&hash=' . $hash . '&' . $urlParts['query'];
+        // 3. Manually build the Frontend URL
+        // This points to your Nuxt page: http://localhost:3000/verify-email
+        $frontendUrl = config('app.frontend_url') . '/verify-email?' .
+            'id=' . $notifiable->getKey() .
+            '&hash=' . sha1($notifiable->getEmailForVerification()) .
+            '&' . $queryString;
 
         return (new MailMessage)
-            ->subject('Welcome to Writing Assistant ✨')
+            ->subject('Verify Your Email ✨')
             ->markdown('emails.verify-email', [
                 'url' => $frontendUrl,
                 'name' => $notifiable->name

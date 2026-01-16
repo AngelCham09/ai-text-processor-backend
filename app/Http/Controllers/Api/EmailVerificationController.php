@@ -5,14 +5,37 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 class EmailVerificationController extends Controller
 {
     public function verify(Request $request)
     {
+        $currentUrl = $request->fullUrl();
+        $expectedUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            Carbon::createFromTimestamp($request->query('expires')),
+            [
+                'id' => $request->route('id'),
+                'hash' => $request->route('hash'),
+            ]
+        );
+
+        Log::info('--- SIGNATURE DEBUG ---');
+        Log::info('Incoming URL: ' . $currentUrl);
+        Log::info('Expected URL: ' . $expectedUrl);
+
+        if ($currentUrl !== $expectedUrl) {
+            Log::info('MISMATCH DETECTED!');
+        }
+        Log::info('Full URL being verified: ' . $request->fullUrl());
+        Log::info('Has valid signature: ' . ($request->hasValidSignature() ? 'YES' : 'NO'));
+
         $user = User::findOrFail($request->route('id'));
 
         if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {

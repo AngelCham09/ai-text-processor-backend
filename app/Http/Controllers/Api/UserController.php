@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -19,6 +20,8 @@ class UserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
         ]);
+
+        DB::beginTransaction();
 
         try {
             //confirmed rule requires a field with _confirmation suffix
@@ -39,14 +42,18 @@ class UserController extends Controller
 
             $token = $user->createToken('api-token')->plainTextToken;
 
+            DB::commit();
+
             return ApiResponse::success('User registered successfully', [
                 'token' => $token,
-                'user' => $user,
+                'user' => new UserResource($user),
             ]);
 
         } catch (ValidationException $e) {
+            DB::rollBack();
             return ApiResponse::error('Registration validation failed', $e->errors(), 422);
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Registration failed', [
                 'message' => $e->getMessage(),
             ]);
