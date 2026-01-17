@@ -16,25 +16,6 @@ class EmailVerificationController extends Controller
 {
     public function verify(Request $request)
     {
-        $currentUrl = $request->fullUrl();
-        $expectedUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            Carbon::createFromTimestamp($request->query('expires')),
-            [
-                'id' => $request->route('id'),
-                'hash' => $request->route('hash'),
-            ]
-        );
-
-        Log::info('--- SIGNATURE DEBUG ---');
-        Log::info('Incoming URL: ' . $currentUrl);
-        Log::info('Expected URL: ' . $expectedUrl);
-
-        if ($currentUrl !== $expectedUrl) {
-            Log::info('MISMATCH DETECTED!');
-        }
-        Log::info('Full URL being verified: ' . $request->fullUrl());
-        Log::info('Has valid signature: ' . ($request->hasValidSignature() ? 'YES' : 'NO'));
 
         $user = User::findOrFail($request->route('id'));
 
