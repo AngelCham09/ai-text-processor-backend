@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 class EmailVerificationController extends Controller
 {
     public function verify(Request $request)
     {
+
         $user = User::findOrFail($request->route('id'));
 
         if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
