@@ -24,8 +24,6 @@ class UserController extends Controller
         DB::beginTransaction();
 
         try {
-            //confirmed rule requires a field with _confirmation suffix
-            //laravel will look for a field called password_confirmation
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
@@ -93,6 +91,29 @@ class UserController extends Controller
     {
         return ApiResponse::success('User profile fetched successfully', [
             'user' => new UserResource($request->user()),
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'current_password' => 'required_with:password|current_password',
+            'password' => 'nullable|min:8|confirmed',
+        ]);
+
+        $user->name = $validated['name'];
+
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
+        $user->save();
+
+        return ApiResponse::success('Profile updated successfully', [
+            'user' => new UserResource($user),
         ]);
     }
 }

@@ -16,7 +16,9 @@ Route::middleware(['optional.sanctum', 'throttle:process-text'])->group(function
 Route::middleware(['auth:sanctum', 'throttle:user-api'])->group(function () {
     Route::post('/logout', [\App\Http\Controllers\Api\UserController::class, 'logout']);
     Route::get('/profile', [\App\Http\Controllers\Api\UserController::class, 'profile']);
+    Route::put('/profile/update', [\App\Http\Controllers\Api\UserController::class, 'updateProfile']);
     Route::get('/history', [\App\Http\Controllers\Api\TextProcessorController::class, 'history']);
+    Route::delete('/history', [\App\Http\Controllers\Api\TextProcessorController::class, 'deleteHistory']);
 });
 
 Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\Api\EmailVerificationController::class, 'verify'])
