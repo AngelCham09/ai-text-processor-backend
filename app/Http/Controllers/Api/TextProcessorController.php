@@ -48,14 +48,12 @@ class TextProcessorController extends Controller
                 'result' => $result
             ]);
         } catch (\InvalidArgumentException $e) {
-            // Invalid enum/action type
             Log::warning('Invalid action type', [
                 'user_id' => $user?->id,
                 'action' => $request->action
             ]);
             return ApiResponse::error('Invalid action type', null, 400);
         } catch (\Exception $e) {
-            // Other exceptions
             Log::error('Text processing error', [
                 'message' => $e->getMessage(),
                 'user_id' => $user?->id,
@@ -69,8 +67,26 @@ class TextProcessorController extends Controller
     {
         $jobs = TextJob::where('user_id', $request->user()->id)
             ->latest()
-            ->paginate(3);
+            ->paginate(10);
 
         return ApiResponse::success('History fetched successfully', TextJobResource::collection($jobs));
+    }
+
+    public function deleteHistory(Request $request)
+    {
+        $userId = $request->user()->id;
+        $ids = $request->input('ids');
+
+        $query = TextJob::where('user_id', $userId);
+
+        if (!empty($ids) && is_array($ids)) {
+            $query->whereIn('id', $ids)->delete();
+            $message = 'Selected history cleared.';
+        } else {
+            $query->delete();
+            $message = 'All history cleared.';
+        }
+
+        return ApiResponse::success($message);
     }
 }
