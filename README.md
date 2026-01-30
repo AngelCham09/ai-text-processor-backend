@@ -25,7 +25,7 @@ A robust RESTful API built with Laravel 12, providing AI-powered text processing
 * **AI Provider**: Google Gemini AI
 * **Email Provider**: Brevo 
 
-## 🔧 Installation & Setup
+## Installation & Setup
 
 1. **Clone the repo:**
    ```bash
